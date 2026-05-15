@@ -446,7 +446,7 @@ PIPER_DEFAULT_MODEL=es_MX-ald-medium
 PIPER_MODEL_NAMES=["es_MX-claude-high","es_MX-ald-medium","es_ES-carlfm-x_low"]
 ```
 
-Coolify usually provides the public domain and external proxy. The container listens on `0.0.0.0:8000`.
+Coolify usually provides the public domain and external proxy. The container listens on `0.0.0.0:${PIPER_PORT}` (default `8000`). If you wire the subdomain in Coolify to a non-default port (e.g. `7124`), set `PIPER_PORT=7124` in the Coolify environment so the container binds to the matching port.
 
 If you want it as a public API only, use:
 
