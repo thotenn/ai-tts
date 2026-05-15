@@ -1,0 +1,23 @@
+services:
+  piper-sandbox:
+    build: .
+    container_name: piper-sandbox
+    restart: unless-stopped
+    environment:
+      PIPER_HOST: 0.0.0.0
+      PIPER_PORT: 8000
+      PIPER_ENABLE_GUI: ${PIPER_ENABLE_GUI:-true}
+      PIPER_MODELS_DIR: /app/models/piper
+    ports:
+      - "8000:8000"
+    volumes:
+      - piper-models:/app/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  piper-models:

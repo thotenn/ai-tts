@@ -1,0 +1,19 @@
+[project]
+name = "piper-sandbox"
+version = "0.1.0"
+description = "Small Python library, API, and GUI for testing Piper TTS voices."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+tts = ["piper-tts>=1.2"]
+dev = []
+
+[project.scripts]
+piper-sandbox-api = "piper_sandbox.api:main"
+piper-sandbox-gui = "piper_sandbox.api:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
