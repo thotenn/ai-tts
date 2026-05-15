@@ -16,6 +16,10 @@ services:
       PIPER_HF_BASE: ${PIPER_HF_BASE:-https://huggingface.co/rhasspy/piper-voices/resolve/main}
       PIPER_DEFAULT_MODEL: ${PIPER_DEFAULT_MODEL:-es_MX-ald-medium}
       PIPER_MODEL_NAMES: ${PIPER_MODEL_NAMES:-["es_MX-claude-high","es_MX-ald-medium","es_ES-carlfm-x_low"]}
+      PIPER_CHUNKS_ENABLED: ${PIPER_CHUNKS_ENABLED:-false}
+      PIPER_CHUNK_TARGET_CHARS: ${PIPER_CHUNK_TARGET_CHARS:-350}
+      PIPER_CHUNK_MIN_CHARS: ${PIPER_CHUNK_MIN_CHARS:-120}
+      PIPER_CHUNK_MAX_CHARS: ${PIPER_CHUNK_MAX_CHARS:-700}
     ports:
       - "${PIPER_HOST_PORT:-8000}:${PIPER_PORT:-8000}"
     volumes:
