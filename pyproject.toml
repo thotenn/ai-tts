@@ -8,7 +8,10 @@ dependencies = []
 
 [project.optional-dependencies]
 tts = ["piper-tts>=1.2"]
-dev = []
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [project.scripts]
 piper-sandbox-api = "piper_sandbox.api:main"

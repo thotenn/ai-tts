@@ -4,34 +4,34 @@ V1 scope only. Hardware detection, benchmark, adaptive controller, prefetch and 
 
 ## Phase 1 — Splitter (`piper_sandbox/chunks.py`)
 
-- [ ] Add `ChunkConfig` dataclass (`target_chars`, `min_chars`, `max_chars`).
-- [ ] Add `TextChunk` dataclass (`index`, `text`, `chars`, `split_reason`).
-- [ ] Implement `split_text(text: str, config: ChunkConfig) -> list[TextChunk]`.
-- [ ] Normalize `\r\n` and `\r` to `\n` before splitting.
-- [ ] Raise `ValueError` on empty/whitespace-only text.
-- [ ] Outer pass: pack paragraphs separated by `\n{2,}` into the current chunk.
-- [ ] Emit current chunk when adding the next paragraph would overflow target significantly.
-- [ ] Never include the next paragraph just to consume residual target budget.
-- [ ] Inner pass: when a single paragraph exceeds `max_chars`, split inside it using `find_split` (sentence → strong → comma → space → hard).
-- [ ] `find_split` searches in window `[max(min_chars, 0.65 * target_chars), max_chars]`.
-- [ ] Boundary char stays in the *previous* chunk; leading whitespace stripped from the *next*.
-- [ ] First/only chunk uses `split_reason="single"`.
-- [ ] Sequential `index` starting at 0.
+- [x] Add `ChunkConfig` dataclass (`target_chars`, `min_chars`, `max_chars`).
+- [x] Add `TextChunk` dataclass (`index`, `text`, `chars`, `split_reason`).
+- [x] Implement `split_text(text: str, config: ChunkConfig) -> list[TextChunk]`.
+- [x] Normalize `\r\n` and `\r` to `\n` before splitting.
+- [x] Raise `ValueError` on empty/whitespace-only text.
+- [x] Outer pass: pack paragraphs separated by `\n{2,}` into the current chunk.
+- [x] Emit current chunk when adding the next paragraph would overflow target significantly.
+- [x] Never include the next paragraph just to consume residual target budget.
+- [x] Inner pass: when a single paragraph exceeds `max_chars`, split inside it using `find_split` (sentence → strong → comma → space → hard).
+- [x] `find_split` searches in window `[max(min_chars, 0.65 * target_chars), max_chars]`.
+- [x] Boundary char stays in the *previous* chunk; leading whitespace stripped from the *next*.
+- [x] First/only chunk uses `split_reason="single"`.
+- [x] Sequential `index` starting at 0.
 
 ### Splitter tests (`tests/test_chunks.py`)
 
-- [ ] `pip install -e '.[dev]'` works and `pytest` discovers the file.
-- [ ] Short text returns exactly one chunk with `split_reason="single"`.
-- [ ] Three short paragraphs summing to ≤ target become one chunk.
-- [ ] A fourth paragraph that would clearly overflow target starts a new chunk.
-- [ ] Sentence longer than max splits at a comma.
-- [ ] Paragraph with no punctuation splits at whitespace.
-- [ ] Single token longer than max is hard-split at exactly `max_chars`.
-- [ ] Order is preserved: concatenated chunks equal the input modulo whitespace normalization.
-- [ ] No empty chunks ever returned.
-- [ ] `chars` matches `len(text)` in every chunk.
-- [ ] `\r\n` line endings produce the same chunks as `\n`.
-- [ ] Empty input raises `ValueError`.
+- [x] `pip install -e '.[dev]'` works and `pytest` discovers the file.
+- [x] Short text returns exactly one chunk with `split_reason="single"`.
+- [x] Three short paragraphs summing to ≤ target become one chunk.
+- [x] A fourth paragraph that would clearly overflow target starts a new chunk.
+- [x] Sentence longer than max splits at a comma.
+- [x] Paragraph with no punctuation splits at whitespace.
+- [x] Single token longer than max is hard-split at exactly `max_chars`.
+- [x] Order is preserved: concatenated chunks equal the input modulo whitespace normalization.
+- [x] No empty chunks ever returned.
+- [x] `chars` matches `len(text)` in every chunk.
+- [x] `\r\n` line endings produce the same chunks as `\n`.
+- [x] Empty input raises `ValueError`.
 
 ## Phase 2 — Endpoint (`piper_sandbox/api.py`)
 
