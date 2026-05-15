@@ -123,6 +123,8 @@ PIPER_SERVICE_MODE=gui
 PIPER_ENGINE_URL=https://tts-engine.example.com
 ```
 
+`PIPER_ENGINE_URL` is only honoured in `gui` mode. In `both` and `engine` modes it is ignored (the GUI is same-origin, so absolute URLs would break browser requests).
+
 You can also use flags:
 
 ```bash

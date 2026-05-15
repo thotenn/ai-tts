@@ -484,8 +484,13 @@ def main() -> None:
     elif "PIPER_ENABLE_GUI" in os.environ:
         service_mode = "both" if env_bool("PIPER_ENABLE_GUI", True) else "engine"
 
+    engine_url = args.engine_url.rstrip("/")
+    if service_mode != "gui" and engine_url:
+        print(f"Ignoring PIPER_ENGINE_URL={engine_url!r} in {service_mode!r} mode; GUI will use same-origin requests.")
+        engine_url = ""
+
     PiperRequestHandler.service_mode = service_mode
-    PiperRequestHandler.engine_url = args.engine_url.rstrip("/")
+    PiperRequestHandler.engine_url = engine_url
     PiperRequestHandler.cors_origin = args.cors_origin
     PiperRequestHandler.chunks_enabled = env_bool("PIPER_CHUNKS_ENABLED", False)
     PiperRequestHandler.chunk_config = ChunkConfig(
