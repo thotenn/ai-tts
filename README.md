@@ -4,6 +4,8 @@ Small Python library, HTTP API, and optional web GUI for testing TTS voices with
 
 The first generation automatically downloads the selected model into `PIPER_MODELS_DIR`.
 
+> Building something with the API? See the **[API Cookbook](docs/context/0-api/README.md)** for recipes covering Python and JavaScript clients, NDJSON streaming, LLM-with-voice integration, and production operations.
+
 ## Requirements
 
 - Python 3.11 or 3.12 recommended.
