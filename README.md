@@ -69,6 +69,10 @@ PIPER_HF_BASE=https://huggingface.co/rhasspy/piper-voices/resolve/main
 PIPER_DEFAULT_MODEL=es_MX-ald-medium
 PIPER_MODEL_NAMES=["es_MX-claude-high","es_MX-ald-medium","es_ES-carlfm-x_low"]
 # PIPER_BIN=/usr/local/bin/piper
+PIPER_CHUNKS_ENABLED=false
+PIPER_CHUNK_TARGET_CHARS=350
+PIPER_CHUNK_MIN_CHARS=120
+PIPER_CHUNK_MAX_CHARS=700
 ```
 
 `PIPER_PORT` is the port used by the Python process inside the container or when running locally. `PIPER_HOST_PORT` is the port exposed on the host machine by Docker Compose.
@@ -136,6 +140,29 @@ python -m piper_sandbox.api --gui
 ```env
 PIPER_CORS_ORIGIN=https://tts-gui.example.com
 ```
+
+### Chunked TTS Streaming
+
+`PIPER_CHUNKS_ENABLED=true` activates the additive `POST /speak/chunks` endpoint described below. The existing `/speak` endpoint is unchanged regardless of this flag. The GUI reads `chunks_enabled` from `/health` on load and automatically picks the chunked path when available.
+
+```env
+PIPER_CHUNKS_ENABLED=true
+PIPER_CHUNK_TARGET_CHARS=350
+PIPER_CHUNK_MIN_CHARS=120
+PIPER_CHUNK_MAX_CHARS=700
+```
+
+The splitter packs paragraphs and falls back to sentence/clause/whitespace boundaries; `target_chars` is the preferred chunk size, not a hard cap. `min_chars` and `max_chars` define the operating range. Short text naturally becomes a single chunk. Validation happens at startup — if `min > target > max` is violated the process refuses to start.
+
+**Proxy buffering caveat.** The chunked endpoint relies on the server flushing each NDJSON line immediately. Reverse proxies that buffer responses (nginx by default, some Cloudflare/Coolify setups) will hold the entire stream until completion, defeating the latency benefit. The endpoint already sets `X-Accel-Buffering: no` for nginx-compatible proxies; if you front the engine with a different proxy, ensure response buffering is disabled on the `/speak/chunks` route. Verify from the shell with:
+
+```bash
+curl -N -X POST https://your-engine/speak/chunks \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"texto largo...","model":"es_MX-ald-medium"}'
+```
+
+If all lines arrive at once after a long pause, the proxy is buffering.
 
 `PIPER_MODEL_NAMES` can be a JSON array or a comma-separated list:
 
@@ -249,9 +276,12 @@ Response:
   "status": "ok",
   "mode": "both",
   "engine": true,
-  "gui": true
+  "gui": true,
+  "chunks_enabled": false
 }
 ```
+
+`chunks_enabled` is `true` only when the engine is enabled in this process *and* `PIPER_CHUNKS_ENABLED=true`. GUI clients should read this field to decide whether to call `/speak` or `/speak/chunks`.
 
 ### `GET /models`
 
@@ -281,6 +311,48 @@ Successful response:
 ```text
 Content-Type: audio/wav
 ```
+
+### `POST /speak/chunks`
+
+Streams long text as a sequence of synthesized audio chunks, so the client can start playing chunk 0 before the rest finish synthesizing. Available in `both` and `engine` modes when `PIPER_CHUNKS_ENABLED=true`. Returns `501 Not Implemented` if the feature flag is off.
+
+Request body is identical to `/speak`:
+
+```json
+{"text": "Texto largo...", "model": "es_MX-ald-medium"}
+```
+
+Response is `application/x-ndjson` — one JSON object per line, flushed as each chunk is ready:
+
+```text
+{"type":"meta","model":"es_MX-ald-medium","chunks":3,"target_chars":350,"min_chars":120,"max_chars":700}
+{"type":"chunk","index":0,"chars":318,"split_reason":"sentence","synthesis_seconds":1.42,"duration_seconds":8.21,"rtf":0.17,"audio_base64":"UklGRg..."}
+{"type":"chunk","index":1, ...}
+{"type":"chunk","index":2, ...}
+{"type":"done"}
+```
+
+Each `chunk.audio_base64` is a complete WAV (header + samples) base64-encoded. Decode and play in order.
+
+Original chunk text is omitted by default to save bandwidth. Pass `?include_text=1` to include the `text` field in each chunk event.
+
+If synthesis fails partway through, the server emits an in-band error event instead of `done` and closes the stream:
+
+```text
+{"type":"error","index":2,"message":"..."}
+```
+
+Pre-stream errors (invalid JSON, empty text, unknown model) return HTTP `400` before any NDJSON is written.
+
+Test from the shell:
+
+```bash
+curl -N -X POST http://127.0.0.1:8000/speak/chunks \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"Texto suficientemente largo para producir varios chunks...","model":"es_MX-ald-medium"}'
+```
+
+Pass `-N` (`--no-buffer`) to see lines arrive progressively.
 
 ### `GET /`
 

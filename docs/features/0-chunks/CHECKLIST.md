@@ -84,12 +84,12 @@ V1 scope only. Hardware detection, benchmark, adaptive controller, prefetch and 
 
 ## Phase 4 — Config and docs
 
-- [ ] Add new variables to `.env.example`: `PIPER_CHUNKS_ENABLED`, `PIPER_CHUNK_TARGET_CHARS`, `PIPER_CHUNK_MIN_CHARS`, `PIPER_CHUNK_MAX_CHARS`. Default `PIPER_CHUNKS_ENABLED=false`.
-- [ ] Add the same env vars (with the same defaults) to `Dockerfile` `ENV` block.
-- [ ] Add `pytest>=8` to `pyproject.toml` `[project.optional-dependencies].dev`.
-- [ ] README: add `/speak/chunks` section under `## Endpoints`, document NDJSON event shape, document `PIPER_CHUNKS_ENABLED` and chunk env vars.
-- [ ] README: document the known proxy-buffering caveat.
-- [ ] CLAUDE.md: add one line under `## Architecture` noting the new endpoint and module, and add `chunks.py` to the module list.
+- [x] Add new variables to `.env.example`: `PIPER_CHUNKS_ENABLED`, `PIPER_CHUNK_TARGET_CHARS`, `PIPER_CHUNK_MIN_CHARS`, `PIPER_CHUNK_MAX_CHARS`. Default `PIPER_CHUNKS_ENABLED=false`.
+- [x] Add the same env vars (with the same defaults) to `Dockerfile` `ENV` block.
+- [x] Add `pytest>=8` to `pyproject.toml` `[project.optional-dependencies].dev`.
+- [x] README: add `/speak/chunks` section under `## Endpoints`, document NDJSON event shape, document `PIPER_CHUNKS_ENABLED` and chunk env vars.
+- [x] README: document the known proxy-buffering caveat.
+- [x] CLAUDE.md: add one line under `## Architecture` noting the new endpoint and module, and add `chunks.py` to the module list.
 
 ## Phase 5 — Validation
 

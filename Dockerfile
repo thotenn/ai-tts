@@ -11,7 +11,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIPER_MODELS_DIR=/app/models/piper \
     PIPER_HF_BASE=https://huggingface.co/rhasspy/piper-voices/resolve/main \
     PIPER_DEFAULT_MODEL=es_MX-ald-medium \
-    PIPER_MODEL_NAMES='["es_MX-claude-high","es_MX-ald-medium","es_ES-carlfm-x_low"]'
+    PIPER_MODEL_NAMES='["es_MX-claude-high","es_MX-ald-medium","es_ES-carlfm-x_low"]' \
+    PIPER_CHUNKS_ENABLED=false \
+    PIPER_CHUNK_TARGET_CHARS=350 \
+    PIPER_CHUNK_MIN_CHARS=120 \
+    PIPER_CHUNK_MAX_CHARS=700
 
 WORKDIR /app
 
