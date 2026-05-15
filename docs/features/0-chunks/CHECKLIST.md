@@ -72,14 +72,14 @@ V1 scope only. Hardware detection, benchmark, adaptive controller, prefetch and 
 
 ## Phase 3 — Reference GUI
 
-- [ ] `INDEX_HTML` fetches `/health` on load and reads `chunks_enabled`.
-- [ ] When chunks enabled: `say()` calls `/speak/chunks`, parses NDJSON from `response.body.getReader()`.
-- [ ] When chunks disabled: `say()` calls `/speak` (current behavior).
-- [ ] Decode `audio_base64` → `Uint8Array` → `Blob({type:'audio/wav'})`.
-- [ ] Maintain FIFO playback queue; start playback on first chunk; on `audio.ended` play next.
-- [ ] Status text reflects state: `Generando`, `Reproduciendo (i/N)`, `Listo`, `Error`.
-- [ ] Handle in-band `error` event: finish queued chunks, then alert.
-- [ ] Health fetch uses the same `__ENGINE_URL__` as `/speak/chunks` (works in `gui` mode pointing to remote engine).
+- [x] `INDEX_HTML` fetches `/health` on load and reads `chunks_enabled`.
+- [x] When chunks enabled: `say()` calls `/speak/chunks`, parses NDJSON from `response.body.getReader()`.
+- [x] When chunks disabled: `say()` calls `/speak` (current behavior).
+- [x] Decode `audio_base64` → `Uint8Array` → `Blob({type:'audio/wav'})`.
+- [x] Maintain FIFO playback queue; start playback on first chunk; on `audio.ended` play next.
+- [x] Status text reflects state: `Generando`, `Reproduciendo (i/N)`, `Listo`, `Error`.
+- [x] Handle in-band `error` event: finish queued chunks, then alert.
+- [x] Health fetch uses the same `__ENGINE_URL__` as `/speak/chunks` (works in `gui` mode pointing to remote engine).
 - [ ] Manually click "Hablar" with a long paragraph and confirm playback starts before all chunks have arrived.
 
 ## Phase 4 — Config and docs

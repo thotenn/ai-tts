@@ -66,6 +66,76 @@ INDEX_HTML = """
     const engineUrl = __ENGINE_URL_JSON__;
     const apiUrl = (path) => `${engineUrl}${path}`;
 
+    let chunksEnabled = false;
+
+    const playback = {
+      queue: [],
+      playing: false,
+      streamDone: false,
+      total: 0,
+      played: 0,
+      pendingError: null,
+    };
+
+    function resetPlayback() {
+      playback.queue = [];
+      playback.playing = false;
+      playback.streamDone = false;
+      playback.total = 0;
+      playback.played = 0;
+      playback.pendingError = null;
+    }
+
+    function base64ToBlob(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type: 'audio/wav' });
+    }
+
+    function advance() {
+      const blob = playback.queue.shift();
+      audio.src = URL.createObjectURL(blob);
+      audio.play();
+      playback.playing = true;
+      playback.played += 1;
+      status.textContent = `Reproduciendo (${playback.played}/${playback.total})`;
+    }
+
+    function finishPlayback() {
+      speak.disabled = false;
+      if (playback.pendingError) {
+        status.textContent = 'Error';
+        alert(playback.pendingError);
+      } else {
+        status.textContent = 'Listo';
+      }
+    }
+
+    audio.addEventListener('ended', () => {
+      if (playback.total === 0) return;
+      if (playback.queue.length > 0) {
+        advance();
+        return;
+      }
+      playback.playing = false;
+      if (playback.streamDone) {
+        finishPlayback();
+      } else {
+        status.textContent = `Buferizando (${playback.played}/${playback.total})`;
+      }
+    });
+
+    async function loadHealth() {
+      try {
+        const response = await fetch(apiUrl('/health'));
+        const data = await response.json();
+        chunksEnabled = !!data.chunks_enabled;
+      } catch (err) {
+        chunksEnabled = false;
+      }
+    }
+
     async function loadModels() {
       const response = await fetch(apiUrl('/models'));
       const data = await response.json();
@@ -78,9 +148,56 @@ INDEX_HTML = """
       model.value = data.default;
     }
 
-    async function say() {
+    function handleEvent(evt) {
+      if (evt.type === 'meta') {
+        playback.total = evt.chunks;
+      } else if (evt.type === 'chunk') {
+        playback.queue.push(base64ToBlob(evt.audio_base64));
+        if (!playback.playing) advance();
+      } else if (evt.type === 'error') {
+        playback.pendingError = evt.message;
+      }
+    }
+
+    async function sayChunked() {
+      resetPlayback();
+      speak.disabled = true;
+      status.textContent = 'Generando audio...';
       const body = { text: text.value.trim(), model: model.value };
-      if (!body.text) return;
+      try {
+        const response = await fetch(apiUrl('/speak/chunks'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          const detail = await response.text();
+          throw new Error(detail || `HTTP ${response.status}`);
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let nl;
+          while ((nl = buf.indexOf('\\n')) >= 0) {
+            const line = buf.slice(0, nl).trim();
+            buf = buf.slice(nl + 1);
+            if (line) handleEvent(JSON.parse(line));
+          }
+        }
+      } catch (err) {
+        playback.pendingError = err.message;
+      } finally {
+        playback.streamDone = true;
+        if (!playback.playing) finishPlayback();
+      }
+    }
+
+    async function sayWhole() {
+      const body = { text: text.value.trim(), model: model.value };
       speak.disabled = true;
       status.textContent = 'Generando audio...';
       try {
@@ -102,6 +219,15 @@ INDEX_HTML = """
       }
     }
 
+    async function say() {
+      if (!text.value.trim()) return;
+      if (chunksEnabled) {
+        await sayChunked();
+      } else {
+        await sayWhole();
+      }
+    }
+
     speak.addEventListener('click', say);
     text.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -109,7 +235,11 @@ INDEX_HTML = """
         say();
       }
     });
-    loadModels();
+
+    (async () => {
+      await loadHealth();
+      await loadModels();
+    })();
   </script>
 </body>
 </html>
